@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Salaires</title>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Gestion des Salaires</h1>
+
+        <form id="salary-form">
+            <input type="text" id="nom" placeholder="Nom de l'employé" required>
+            <input type="number" id="salaireParJour" placeholder="Salaire par jour (Rs)" required>
+            <input type="number" id="joursTravail" placeholder="Jours travaillés" required>
+
+            <label for="typeJourFerie">Type de jour férié ou samedi :</label>
+            <select id="typeJourFerie">
+                <option value="aucun">Aucun</option>
+                <option value="ferie">Jour Férié</option>
+                <option value="samedi">Samedi</option>
+            </select>
+            <input type="number" id="jfer" placeholder="ferie ou samedi">
+            <input type="number" id="transport" placeholder="Jours avec transport">
+            <input type="number" id="frais" placeholder="Montant transport (Rs)">
+            <input type="number" id="bonus" placeholder="Bonus (Rs)">
+            <input type="number" id="augmentation" placeholder="Augmentation (Rs)">
+            <input type="number" id="avance" placeholder="Avance déduite (Rs)">
+
+            <div class="buttons">
+                <button type="button" onclick="ajouterEmploye()">Ajouter</button>
+                <button type="button" onclick="remis()">Remise à zéro</button>
+            </div>
+        </form>
+
+        <h2>Salaires des Employés</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Jours Travaillés</th>
+                        <th>Jours Fériés ou samedi</th>
+                        <th>Transport</th>
+                        <th>Bonus</th>
+                        <th>Augmentation</th>
+                        <th>Avance</th>
+                        <th>Salaire Brut</th>
+                        <th>Salaire Net</th>
+                    </tr>
+                </thead>
+                <tbody id="resultat"></tbody>
+            </table>
+        </div>
+
+        <h3>Total des salaires nets : <span id="totalSalaireNet">0</span> Rs</h3>
+    </div>
+</body>
+</html>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    padding: 20px;
+    text-align: center;
+}
+
+.container {
+    background: white;
+    padding: 15px;
+    width: 95%;
+    margin: auto;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2, h3 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+input, select {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 100%;
+}
+
+.buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+button {
+    padding: 10px;
+    font-size: 16px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Responsive pour le tableau */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    width: 100%;
+    min-width: 800px;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background-color: #007BFF;
+    color: white;
+}
+
+h3 {
+    margin-top: 20px;
+    color: #007BFF;
+}
+
+/* Desktop/tablette */
+@media (min-width: 768px) {
+    .container {
+        width: 60%;
+    }
+
+    .buttons {
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    input, select {
+        width: 80%;
+        margin: auto;
+    }
+}
+</style>
+
+<script>
+let totalSalaireNet = 0;
+
+function ajouterEmploye() {
+    let nom = document.getElementById("nom").value.trim();
+    let salaireParJour = parseFloat(document.getElementById("salaireParJour").value) || 0;
+    let joursTravail = parseInt(document.getElementById("joursTravail").value) || 0;
+    let typeJourFerie = document.getElementById("typeJourFerie").value;
+    let jferi = parseInt(document.getElementById("jfer").value) || 0;
+    let transportJours = parseInt(document.getElementById("transport").value) || 0;
+    let fraistransport = parseInt(document.getElementById("frais").value) ||0;
+    let bonus = parseFloat(document.getElementById("bonus").value) || 0;
+    let augmentation = parseFloat(document.getElementById("augmentation").value) || 0;
+    let avance = parseFloat(document.getElementById("avance").value) || 0;
+
+    if (nom === "" || joursTravail === 0) {
+        alert("Veuillez entrer un nom et au moins un jour travaillé.");
+        return;
+    }
+
+    let joursFerie = jferi;
+    let montantJourFerie = 0;
+
+    if (typeJourFerie === "ferie") {
+        montantJourFerie = salaireParJour * 2 * jferi;
+        joursFerie = jferi;
+    } else if (typeJourFerie === "samedi") {
+        montantJourFerie = 1000 * jferi;
+    }
+
+    let montantTransport = transportJours *  fraistransport;
+    let salaireBrut = (salaireParJour * joursTravail) + montantJourFerie + bonus + augmentation + montantTransport;
+    let salaireNet = salaireBrut - avance;
+
+    let ligne = `<td>${nom}</td>
+                 <td>${joursTravail}</td>                 
+                 <td>${jferi !== 0 ? joursFerie : "-"}</td>`;
+    
+    ligne += (montantTransport !== 0) ? `<td>${montantTransport} Rs</td>` : `<td>-</td>`;
+    ligne += (bonus !== 0) ? `<td>${bonus} Rs</td>` : `<td>-</td>`;
+    ligne += (augmentation !== 0) ? `<td>${augmentation} Rs</td>` : `<td>-</td>`;
+    ligne += (avance !== 0) ? `<td>${avance} Rs</td>` : `<td>-</td>`;
+    ligne += `<td>${salaireBrut} Rs</td>
+              <td>${salaireNet} Rs</td>`;
+
+    let tableau = document.getElementById("resultat");
+    let nouvelleLigne = tableau.insertRow();
+    nouvelleLigne.innerHTML = ligne;
+
+    totalSalaireNet += salaireNet;
+    document.getElementById("totalSalaireNet").textContent = totalSalaireNet;
+
+    document.getElementById("salary-form").reset();
+}
+
+function remis(){
+    document.getElementById("resultat").innerHTML = "";
+    totalSalaireNet = 0;
+    document.getElementById("totalSalaireNet").textContent = totalSalaireNet;
+}
+</script>
